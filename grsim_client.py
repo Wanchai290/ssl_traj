@@ -20,8 +20,8 @@ class GrSimClient:
         command.kickspeedx = 0.0
         command.kickspeedz = 0.0
 
-        command.veltangent = vel_x *1000.0
-        command.velnormal = vel_y *1000.0
+        command.veltangent = vel_x
+        command.velnormal = vel_y
         command.velangular = vel_rot
 
         command.spinner = False
@@ -33,7 +33,8 @@ class GrSimClient:
         self.packet.commands.robot_commands.append(command)
 
     def send(self):
-        print(self.packet)
+        # print(self.packet)
+
         self.client.send(self.packet.SerializeToString())
         self.packet = grSim_Packet()
 
