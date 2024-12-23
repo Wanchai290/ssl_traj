@@ -8,6 +8,8 @@ class SSLVision:
     def __init__(self, address: str = "224.5.23.2", port: int = 10020):
         self.client = MulticastClient(address, port)
         self.packet = SSL_WrapperPacket()
+        self.new_data = False
+        self.t_capture = 0.0
         self._data = {}
         self.lock = Lock()
 
@@ -27,11 +29,18 @@ class SSLVision:
         while True:
             self.update()
 
+    def wait_for_data(self):
+        while not self.new_data:
+            time.sleep(1e-3)
+        self.new_data = False
+
     def update(self):
         data = self.client.receive()
         self.packet.ParseFromString(data)
 
         with self.lock:
+            self.new_data = True
+            self.t_capture = self.packet.detection.t_capture
             for color, entries in [
                 ("blue", self.packet.detection.robots_blue),
                 ("yellow", self.packet.detection.robots_yellow),
