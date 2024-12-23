@@ -4,6 +4,7 @@ from ssl_vision import SSLVision
 from grsim_client import GrSimClient
 from bang_bang import BangBang2D
 
+
 class Robot:
     def __init__(self):
         self.pos = np.array([0.0, 0.0])
@@ -19,16 +20,10 @@ class Robot:
             ]
         )
 
-    def benchmark_controller(self, t):
-        if t < 3:
-            return 10, 0, 0
-        else:
-            return 0, 0, 0
-        
     def goto(self, t, x, y):
         bb = BangBang2D()
         bb.generate(self.pos, [x, y], self.vel, 5, 4)
-        pos, vel, acc = bb.get_pos_vel_acc(0.05)
+        _, vel, __ = bb.get_pos_vel_acc(0.05)
 
         return [vel[0], vel[1], 0.0]
 
@@ -41,9 +36,7 @@ class Robot:
         self.last_t = t
         self.orientation = orientation
 
-        return self.goto(t, 5, 4)
-        # return self.goto(t, np.cos(t)*2, np.sin(t)*2)
-        # return self.benchmark_controller(t)
+        return self.goto(t, 0, 0)
 
 
 class Controller:
@@ -61,12 +54,6 @@ class Controller:
 
         while duration < 0 or elapsed < duration:
             self.vision.wait_for_data()
-
-            # Sleep until next_t
-            # time.sleep(max(0, next_t - time.time()))
-            # current_t = next_t
-            # next_t = current_t + dt
-            # elapsed = current_t - t0
 
             data = self.vision.get_data()
             elapsed = self.vision.t_capture - t0
@@ -87,8 +74,7 @@ class Controller:
 if __name__ == "__main__":
     controller = Controller()
 
-    # controller.run()
-    controller.run(10)
+    controller.run()
 
     import matplotlib.pyplot as plt
 
@@ -100,33 +86,4 @@ if __name__ == "__main__":
     plt.grid()
     plt.xlabel("Time (s)")
     plt.legend()
-    plt.show()
-
-    from signal_analyzer import Signal
-
-    s = Signal(ts, xs)
-    ps, vs, as_ = s.smooth_all()
-
-    # Computing derivative of xs using fd
-    grad = np.diff(xs) / np.diff(ts)
-    grad = np.append(grad, grad[-1])
-
-    # Creating 3 subplots
-    fig, axs = plt.subplots(3)
-    fig.suptitle("Position, Velocity and Acceleration")
-
-    axs[0].plot(ts, xs, label="x")
-    axs[0].plot(ts, ps, label="fitted x")
-    axs[0].legend()
-    axs[0].grid()
-
-    axs[1].plot(ts, vs, label="fitted v")
-    axs[1].plot(ts, grad, label="fd")
-    axs[1].legend()
-    axs[1].grid()
-
-    axs[2].plot(ts, as_, label="fitted a")
-    axs[2].legend()
-    axs[2].grid()
-
     plt.show()

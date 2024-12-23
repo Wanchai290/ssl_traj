@@ -128,23 +128,24 @@ class BangBang2D:
 
 
 if __name__ == "__main__":
+    import matplotlib.pyplot as plt
+
+    # Testing Bang Bang 2D
     bb = BangBang2D()
-    bb.generate([0.0, 0.0], [3.0, 3.0], [3.0, 0.0], 2.0, 3.0)
+    bb.generate([0.0, 0.0], [3.0, 3.0], [1.0, 0.0], 2.0, 3.0)
 
     ts = np.linspace(0, bb.get_duration(), 100)
     xs = [bb.get_pos_vel_acc(t)[0][0] for t in ts]
     ys = [bb.get_pos_vel_acc(t)[0][1] for t in ts]
-    
-    import matplotlib.pyplot as plt
-    
-    # plt.plot(ts, xs)
+
     plt.plot(xs, ys)
     plt.axis("equal")
     plt.grid()
     plt.show()
 
+    # Testing Bang Bang 1D
     bb = BangBang1D()
-    bb.generate(0.0, 3.0, 3.0, 0.9999997837782594, 1.499999675667389)
+    bb.generate(0.0, 1.0, 3.0, 1, 2)
 
     ts = np.linspace(0, bb.get_duration(), 100)
 
