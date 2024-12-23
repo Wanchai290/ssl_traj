@@ -2,12 +2,13 @@ import time
 import numpy as np
 from ssl_vision import SSLVision
 from grsim_client import GrSimClient
-
+from bang_bang import BangBang2D
 
 class Robot:
     def __init__(self):
-        self.x = 0.0
-        self.y = 0.0
+        self.pos = np.array([0.0, 0.0])
+        self.vel = np.array([0.0, 0.0])
+        self.last_t = None
         self.orientation = 0.0
 
     def R_world_robot(self):
@@ -24,20 +25,24 @@ class Robot:
         else:
             return 0, 0, 0
         
-    def goto_pid(self, t, x, y):
-        error_x = x - self.x
-        error_y = y - self.y
-        vel_x = 5.0 * error_x
-        vel_y = 5.0 * error_y
+    def goto(self, t, x, y):
+        bb = BangBang2D()
+        bb.generate(self.pos, [x, y], self.vel, 5, 4)
+        pos, vel, acc = bb.get_pos_vel_acc(0.05)
 
-        return vel_x, vel_y, 0.0
+        return [vel[0], vel[1], 0.0]
 
     def update(self, t, x, y, orientation):
-        self.x = x
-        self.y = y
+        new_pos = np.array([x, y])
+        if self.last_t is not None and self.last_t < t:
+            dt = t - self.last_t
+            self.vel = (new_pos - self.pos) / dt
+        self.pos = new_pos
+        self.last_t = t
         self.orientation = orientation
 
-        return self.goto_pid(t, -5, 0)
+        return self.goto(t, 5, 4)
+        # return self.goto(t, np.cos(t)*2, np.sin(t)*2)
         # return self.benchmark_controller(t)
 
 
@@ -82,9 +87,8 @@ class Controller:
 if __name__ == "__main__":
     controller = Controller()
 
-    controller.run()
-
-    controller.run(6)
+    # controller.run()
+    controller.run(10)
 
     import matplotlib.pyplot as plt
 

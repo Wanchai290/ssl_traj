@@ -87,15 +87,64 @@ class BangBang1D:
                 self.calc_trapezoidal(x0, xd0, xdMax, x_target, xddMax)
         else:
             s_end = self.vel_tri_to_zero(x0, xd0, -xdMax, xddMax)
-            if s_end >= x_target:
+            if s_end <= x_target:
                 self.calc_triangular(x0, xd0, x_target, -xddMax)
             else:
                 self.calc_trapezoidal(x0, xd0, -xdMax, x_target, xddMax)
 
 
+class BangBang2D:
+    def __init__(self):
+        self.x = BangBang1D()
+        self.y = BangBang1D()
+
+    def generate(self, s0, s1, v0, vmax, acc, accuracy=1e-2):
+        inc = np.pi / 8
+        alpha = np.pi / 4
+
+        while inc >= 1e-7:
+            c = np.cos(alpha)
+            s = np.sin(alpha)
+
+            # print((s0[0], v0[0], s1[0], c * vmax, c * acc))
+            self.x.generate(s0[0], v0[0], s1[0], c * vmax, c * acc)
+            self.y.generate(s0[1], v0[1], s1[1], s * vmax, s * acc)
+
+            diff = abs(self.x.get_duration() - self.y.get_duration())
+            if diff < accuracy:
+                break
+            else:
+                if self.x.get_duration() < self.y.get_duration():
+                    alpha += inc
+                else:
+                    alpha -= inc
+                inc /= 2
+
+    def get_duration(self):
+        return max(self.x.get_duration(), self.y.get_duration())
+
+    def get_pos_vel_acc(self, t):
+        return np.array([self.x.get_pos_vel_acc(t), self.y.get_pos_vel_acc(t)]).T
+
+
 if __name__ == "__main__":
+    bb = BangBang2D()
+    bb.generate([0.0, 0.0], [3.0, 3.0], [3.0, 0.0], 2.0, 3.0)
+
+    ts = np.linspace(0, bb.get_duration(), 100)
+    xs = [bb.get_pos_vel_acc(t)[0][0] for t in ts]
+    ys = [bb.get_pos_vel_acc(t)[0][1] for t in ts]
+    
+    import matplotlib.pyplot as plt
+    
+    # plt.plot(ts, xs)
+    plt.plot(xs, ys)
+    plt.axis("equal")
+    plt.grid()
+    plt.show()
+
     bb = BangBang1D()
-    bb.generate(0.0, -5.0, -1.0, 2.0, 3.0)
+    bb.generate(0.0, 3.0, 3.0, 0.9999997837782594, 1.499999675667389)
 
     ts = np.linspace(0, bb.get_duration(), 100)
 
