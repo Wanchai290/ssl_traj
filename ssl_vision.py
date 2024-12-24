@@ -1,4 +1,5 @@
 import time
+import hashlib
 from multicast_client import MulticastClient
 from threading import Thread, Lock
 from com.ssl_vision_wrapper_pb2 import SSL_WrapperPacket
@@ -9,7 +10,6 @@ class SSLVision:
         self.client = MulticastClient(address, port)
         self.packet = SSL_WrapperPacket()
         self.new_data = False
-        self.t_capture = 0.0
         self._data = {}
         self.lock = Lock()
 
@@ -40,19 +40,33 @@ class SSLVision:
 
         with self.lock:
             self.new_data = True
-            self.t_capture = self.packet.detection.t_capture
+            t_capture = self.packet.detection.t_capture
             for color, entries in [
                 ("blue", self.packet.detection.robots_blue),
                 ("yellow", self.packet.detection.robots_yellow),
             ]:
                 for entry in entries:
-                    self._data[f"{color}/{entry.robot_id}"] = {
+                    key = f"{color}/{entry.robot_id}"
+                    entry = {
+                        "t": t_capture,
                         "color": color,
                         "id": entry.robot_id,
                         "x": entry.x / 1000,
                         "y": entry.y / 1000,
+                        "vel_x": 0.0,
+                        "vel_y": 0.0,
                         "orientation": entry.orientation,
                     }
+                    if key in self._data:
+                        if self._data[key]["t"] < t_capture:
+                            dt = t_capture - self._data[key]["t"]
+                            entry["vel_x"] = (entry["x"] - self._data[key]["x"]) / dt
+                            entry["vel_y"] = (entry["y"] - self._data[key]["y"]) / dt
+                        else:
+                            entry["vel_x"] = self._data[key]["vel_x"]
+                            entry["vel_y"] = self._data[key]["vel_y"]
+
+                    self._data[key] = entry
 
 
 if __name__ == "__main__":

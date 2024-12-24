@@ -9,7 +9,6 @@ class Robot:
     def __init__(self):
         self.pos = np.array([0.0, 0.0])
         self.vel = np.array([0.0, 0.0])
-        self.last_t = None
         self.orientation = 0.0
 
     def R_world_robot(self):
@@ -23,17 +22,13 @@ class Robot:
     def goto(self, t, x, y):
         bb = BangBang2D()
         bb.generate(self.pos, [x, y], self.vel, 5, 4)
-        _, vel, __ = bb.get_pos_vel_acc(0.05)
+        _, vel, __ = bb.get_pos_vel_acc(0.075)
 
         return [vel[0], vel[1], 0.0]
 
-    def update(self, t, x, y, orientation):
-        new_pos = np.array([x, y])
-        if self.last_t is not None and self.last_t < t:
-            dt = t - self.last_t
-            self.vel = (new_pos - self.pos) / dt
-        self.pos = new_pos
-        self.last_t = t
+    def update(self, t, x, y, vel_x, vel_y, orientation):
+        self.pos = np.array([x, y])
+        self.vel = np.array([vel_x, vel_y])
         self.orientation = orientation
 
         return self.goto(t, 0, 0)
@@ -48,24 +43,31 @@ class Controller:
         self.data = []
 
     def run(self, duration=-1):
-        t0 = self.vision.t_capture
+        t0 = time.time()
+        next_t = current_t = t0
+        dt = 0.010
         elapsed = 0
         blue0 = Robot()
 
         while duration < 0 or elapsed < duration:
-            self.vision.wait_for_data()
+            # Sleepint until next_t
+            time.sleep(max(0, next_t - time.time()))
+            current_t = next_t
+            next_t = current_t + dt
+            elapsed = current_t - t0
 
             data = self.vision.get_data()
-            elapsed = self.vision.t_capture - t0
 
-            x, y, orientation = (
+            x, y, vel_x, vel_y, orientation = (
                 data["blue/0"]["x"],
                 data["blue/0"]["y"],
+                data["blue/0"]["vel_x"],
+                data["blue/0"]["vel_y"],
                 data["blue/0"]["orientation"],
             )
             if duration > 0:
                 self.data.append((elapsed, x, y, orientation))
-            vel_x, vel_y, vel_rot = blue0.update(elapsed, x, y, orientation)
+            vel_x, vel_y, vel_rot = blue0.update(elapsed, x, y, vel_x, vel_y, orientation)
             vel_x, vel_y = blue0.R_world_robot().T @ [vel_x, vel_y]
             self.client.set_target("blue", 0, vel_x, vel_y, vel_rot)
             self.client.send()
