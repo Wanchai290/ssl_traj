@@ -11,7 +11,7 @@ class MulticastClient:
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 4)
 
         if listen:
-            self.sock.bind(("", port))
+            self.sock.bind((address, port))
 
             mreq = struct.pack("4sl", socket.inet_aton(address), socket.INADDR_ANY)
             self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
