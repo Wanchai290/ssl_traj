@@ -108,7 +108,7 @@ class Controller:
             for team in vel_commands.keys():
                 for i in vel_commands[team].keys():
                     robot = self.robots[team][i]
-                    vel_x, vel_y, _ = robot.goto(0, *vel_commands[team][i])
+                    vel_x, vel_y = vel_commands[team][i]
                     vel_x, vel_y = robot.R_world_robot().T @ [vel_x, vel_y]
                     self.client.set_target(team, i, vel_x, vel_y, 0.)
 
