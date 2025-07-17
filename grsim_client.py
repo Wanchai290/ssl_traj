@@ -1,7 +1,7 @@
 import time
-from multicast_client import MulticastClient
-from com.grSim_Packet_pb2 import grSim_Packet
-from com.grSim_Commands_pb2 import grSim_Robot_Command
+from .multicast_client import MulticastClient
+from .com.grSim_Packet_pb2 import grSim_Packet
+from .com.grSim_Commands_pb2 import grSim_Robot_Command
 
 
 class GrSimClient:

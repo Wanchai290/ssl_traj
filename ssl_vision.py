@@ -1,8 +1,8 @@
 import time
 import hashlib
-from multicast_client import MulticastClient
+from .multicast_client import MulticastClient
 from threading import Thread, Lock
-from com.ssl_vision_wrapper_pb2 import SSL_WrapperPacket
+from .com.ssl_vision_wrapper_pb2 import SSL_WrapperPacket
 
 
 class SSLVision:
